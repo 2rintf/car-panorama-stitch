@@ -26,7 +26,7 @@ public:
 	//bool frontFlag = false;
 	//bool rightFlag = false;
 
-	int camFlag = 0x0000;
+	bool camFlag[4] = { 0,0,0,0 };
 
 private:
 	Ui::CarPanoramaStitchClass ui;
