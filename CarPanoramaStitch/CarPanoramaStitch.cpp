@@ -19,6 +19,15 @@ CarPanoramaStitch::CarPanoramaStitch(QWidget *parent)
 	ui.setupUi(this);
 }
 
+
+void CarPanoramaStitch::stitchProcess()
+{
+	Ptr<Stitcher> stitcher = Stitcher::create();
+	stitcher->setFeaturesFinder((Ptr<Feature2D>)xfeatures2d::SIFT::create());
+
+	
+}
+
 void CarPanoramaStitch::on_backSelectBtn_clicked()
 {
 	QString filePath = QFileDialog::getOpenFileName(this, "ÇëÑ¡ÔñBack Cam...", "./", "*.jpg;*.mp4");//.toUtf8()
@@ -90,6 +99,7 @@ void CarPanoramaStitch::on_rightSelectBtn_clicked()
 void CarPanoramaStitch::on_startBtn_clicked()
 {
 	ui.debugDisplay->append("start.");
+	stitchProcess();
 }
 
 void CarPanoramaStitch::on_cancelBtn_clicked()
