@@ -21,10 +21,12 @@ public:
 	QString frontFilePath;
 	QString rightFilePath;
 
-	bool backFlag = false;
-	bool leftFlag = false;
-	bool frontFlag = false;
-	bool rightFlag = false;
+	//bool backFlag = false;
+	//bool leftFlag = false;
+	//bool frontFlag = false;
+	//bool rightFlag = false;
+
+	int camFlag = 0x0000;
 
 private:
 	Ui::CarPanoramaStitchClass ui;
