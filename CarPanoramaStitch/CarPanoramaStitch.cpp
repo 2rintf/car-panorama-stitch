@@ -34,12 +34,14 @@ void CarPanoramaStitch::on_backSelectBtn_clicked()
 	if (filePath.isEmpty())
 	{
 		ui.debugDisplay->append("File path wrong!");
-		backFlag = false;
+		//backFlag = false;
+		camFlag[0] = false;
 		return;
 	}
 	else {
 		backFilePath = filePath;
-		backFlag = true;
+		//backFlag = true;
+		camFlag[0] = true;
 		ui.debugDisplay->append("Back Cam is selected. " + backFilePath);
 	}
 }
@@ -51,12 +53,14 @@ void CarPanoramaStitch::on_leftSelectBtn_clicked()
 	if (filePath.isEmpty())
 	{
 		ui.debugDisplay->append("File path wrong!");
-		leftFlag = false;
+		//leftFlag = false;
+		camFlag[1] = false;
 		return;
 	}
 	else {
 		leftFilePath = filePath;
-		leftFlag = true;
+		//leftFlag = true;
+		camFlag[1] = true;
 		ui.debugDisplay->append("Left Cam is selected. " + leftFilePath);
 	}
 }
@@ -68,12 +72,12 @@ void CarPanoramaStitch::on_frontSelectBtn_clicked()
 	if (filePath.isEmpty())
 	{
 		ui.debugDisplay->append("File path wrong!");
-		frontFlag = false;
+		camFlag[2] = false;
 		return;
 	}
 	else {
 		frontFilePath = filePath;
-		frontFlag = true;
+		camFlag[2] = true;
 		ui.debugDisplay->append("Front Cam is selected. " + frontFilePath);
 	}
 }
@@ -85,12 +89,12 @@ void CarPanoramaStitch::on_rightSelectBtn_clicked()
 	if (filePath.isEmpty())
 	{
 		ui.debugDisplay->append("File path wrong!");
-		rightFlag = false;
+		camFlag[3] = false;
 		return;
 	}
 	else {
 		rightFilePath = filePath;
-		rightFlag = true;
+		camFlag[3] = true;
 		ui.debugDisplay->append("Right Cam is selected. " + rightFilePath);
 	}
 	//Mat img = imread(qstr2str(rightFilePath));

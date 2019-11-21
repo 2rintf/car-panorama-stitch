@@ -24,10 +24,12 @@ public:
 	QString frontFilePath;
 	QString rightFilePath;
 
-	bool backFlag = false;
-	bool leftFlag = false;
-	bool frontFlag = false;
-	bool rightFlag = false;
+	//bool backFlag = false;
+	//bool leftFlag = false;
+	//bool frontFlag = false;
+	//bool rightFlag = false;
+
+	bool camFlag[4] = { 0,0,0,0 };
 
 	/* For only image stitching. */
 	Mat Img1;
