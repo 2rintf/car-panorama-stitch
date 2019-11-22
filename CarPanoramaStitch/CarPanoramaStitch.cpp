@@ -20,10 +20,18 @@ CarPanoramaStitch::CarPanoramaStitch(QWidget *parent)
 }
 
 
-void CarPanoramaStitch::stitchProcess()
+void CarPanoramaStitch::orderImage()
+{
+
+	//to-do: better way of order image.
+}
+
+void CarPanoramaStitch::imageStitchProcess()
 {
 	Ptr<Stitcher> stitcher = Stitcher::create();
 	stitcher->setFeaturesFinder((Ptr<Feature2D>)xfeatures2d::SIFT::create());
+	Mat pano;
+	//Stitcher::Status status = stitcher->stitch(, pano);
 
 	
 }
@@ -103,7 +111,8 @@ void CarPanoramaStitch::on_rightSelectBtn_clicked()
 void CarPanoramaStitch::on_startBtn_clicked()
 {
 	ui.debugDisplay->append("start.");
-	stitchProcess();
+	orderImage();
+	imageStitchProcess();
 }
 
 void CarPanoramaStitch::on_cancelBtn_clicked()

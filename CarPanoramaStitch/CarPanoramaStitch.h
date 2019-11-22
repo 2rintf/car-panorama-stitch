@@ -48,7 +48,8 @@ public:
 private:
 	Ui::CarPanoramaStitchClass ui;
 
-	void stitchProcess();
+	void orderImage();
+	void imageStitchProcess();
 
 private slots:
 	void on_backSelectBtn_clicked();
