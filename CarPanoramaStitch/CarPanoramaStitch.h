@@ -16,10 +16,12 @@ class CarPanoramaStitch : public QWidget
 public:
 	CarPanoramaStitch(QWidget *parent = Q_NULLPTR);
 
-	QString backFilePath;
-	QString leftFilePath;
-	QString frontFilePath;
-	QString rightFilePath;
+	//QString backFilePath;
+	//QString leftFilePath;
+	//QString frontFilePath;
+	//QString rightFilePath;
+
+	QString imageFilePath[4];
 
 	//bool backFlag = false;
 	//bool leftFlag = false;
