@@ -5,9 +5,16 @@
 #include <qfiledialog.h>
 #include "ui_CarPanoramaStitch.h"
 
+#include <vector>
 #include <opencv2/opencv.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/stitching.hpp>
+#include <xfeatures2d/nonfree.hpp>
+
+#include <chrono>
 
 using namespace cv;
+using namespace std::chrono;
 
 class CarPanoramaStitch : public QWidget
 {
@@ -16,18 +23,58 @@ class CarPanoramaStitch : public QWidget
 public:
 	CarPanoramaStitch(QWidget *parent = Q_NULLPTR);
 
-	QString backFilePath;
-	QString leftFilePath;
-	QString frontFilePath;
-	QString rightFilePath;
+	//QString backFilePath;
+	//QString leftFilePath;
+	//QString frontFilePath;
+	//QString rightFilePath;
 
-	bool backFlag = false;
-	bool leftFlag = false;
-	bool frontFlag = false;
-	bool rightFlag = false;
+	QString imageFilePath[4];
+
+	bool camFlag[4] = { 0,0,0,0 };
+
+	/* For only image stitching. */
+	std::vector<Mat> srcImg;// 固定大小为4
+	std::vector<QImage> showImg;// 固定大小为4，用于QIamge显示。
+							 //类中初始化另一个类时，应该在初始化列表中完成！
+	std::vector<Mat> imgForStitch;
+	QImage showTestImg;
+	int numOfImg = 0;
+	
+	//Mat Img1;
+	//Mat Img2;
+	//Mat Img3;
+	//Mat Img4;
+
+	QImage backImg;//Img1.
+	QImage leftImg;//Img2.
+	QImage frontImg;//Img3.
+	QImage rightImg;//Img4.
+	
+	QImage pano_qt;
+	int numOfStitchImage = 0;
+	/* For only image stitching. */
+	Ptr<Stitcher> stitcher ;
+	
+
+	struct CAM
+	{
+		Mat cv_img;
+		QImage qt_img;
+		bool isNull = true;
+
+	};
+
+	
+
+
 
 private:
 	Ui::CarPanoramaStitchClass ui;
+
+	Mat temp;
+
+	void orderImage();
+	void imageStitchProcess();
 
 private slots:
 	void on_backSelectBtn_clicked();
@@ -36,4 +83,5 @@ private slots:
 	void on_rightSelectBtn_clicked();
 	void on_startBtn_clicked();
 	void on_cancelBtn_clicked();
+	void on_lockBtn_clicked();
 };
