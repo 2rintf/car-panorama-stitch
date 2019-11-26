@@ -5,10 +5,11 @@
 #include <qfiledialog.h>
 #include "ui_CarPanoramaStitch.h"
 
+#include <vector>
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/stitching.hpp>
-#include <xfeatures2d/nonfree.hpp>
+//#include <xfeatures2d/nonfree.hpp>
 
 using namespace cv;
 
@@ -26,18 +27,18 @@ public:
 
 	QString imageFilePath[4];
 
-	//bool backFlag = false;
-	//bool leftFlag = false;
-	//bool frontFlag = false;
-	//bool rightFlag = false;
-
 	bool camFlag[4] = { 0,0,0,0 };
 
 	/* For only image stitching. */
-	Mat Img1;
-	Mat Img2;
-	Mat Img3;
-	Mat Img4;
+	std::vector<Mat> srcImg;// 此vector用于stitch，故大小不固定。
+	std::vector<QImage> showImg;// 固定大小为4，用于QIamge显示。
+							 //类中初始化另一个类时，应该在初始化列表中完成！
+	int numOfImg = 0;
+	
+	//Mat Img1;
+	//Mat Img2;
+	//Mat Img3;
+	//Mat Img4;
 
 	QImage backImg;//Img1.
 	QImage leftImg;//Img2.
@@ -45,10 +46,14 @@ public:
 	QImage rightImg;//Img4.
 	/* For only image stitching. */
 
+	
+
 
 
 private:
 	Ui::CarPanoramaStitchClass ui;
+
+	Mat temp;
 
 	void orderImage();
 	void imageStitchProcess();
@@ -60,4 +65,5 @@ private slots:
 	void on_rightSelectBtn_clicked();
 	void on_startBtn_clicked();
 	void on_cancelBtn_clicked();
+	void on_lockBtn_clicked();
 };

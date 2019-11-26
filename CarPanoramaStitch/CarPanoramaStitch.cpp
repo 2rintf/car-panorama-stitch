@@ -14,22 +14,43 @@ std::string qstr2str(const QString qstr)
 /*************************************/
 
 CarPanoramaStitch::CarPanoramaStitch(QWidget *parent)
-	: QWidget(parent)
+	: QWidget(parent),showImg(4)
 {
 	ui.setupUi(this);
+	ui.startBtn->setEnabled(false);
 }
 
 
 void CarPanoramaStitch::orderImage()
 {
-
 	//to-do: better way of order image.
+	for (int i = 0; i < 4; i++)
+	{
+		if (camFlag[i])
+		{
+			temp = imread(qstr2str(imageFilePath[i]));
+			Mat temp2;
+			temp.convertTo(temp2, CV_8UC3);
+			srcImg.push_back(temp2);
+			cvtColor(temp2, temp2, COLOR_BGR2RGB);
+			qDebug()<< ui.backPic->width()<< ui.backPic->height();
+			//！ 这里resize有问题，会导致QIamge显示错误
+			cv::resize(temp2, temp2, Size(ui.backPic->width(), ui.backPic->height()));
+			qDebug() << temp2.step;
+			
+			showImg[i] = QImage((const unsigned char*)(temp2.data),temp2.cols, temp2.rows,temp2.step[0], QImage::Format_RGB888);
+		}
+		else
+		{
+			showImg[i] = QImage();
+		}
+	}
 }
 
 void CarPanoramaStitch::imageStitchProcess()
 {
-	Ptr<Stitcher> stitcher = Stitcher::create();
-	stitcher->setFeaturesFinder((Ptr<Feature2D>)xfeatures2d::SIFT::create());
+	//Ptr<Stitcher> stitcher = Stitcher::create();
+	//stitcher->setFeaturesFinder((Ptr<Feature2D>)xfeatures2d::SIFT::create());
 	Mat pano;
 	//Stitcher::Status status = stitcher->stitch(, pano);
 
@@ -111,11 +132,40 @@ void CarPanoramaStitch::on_rightSelectBtn_clicked()
 void CarPanoramaStitch::on_startBtn_clicked()
 {
 	ui.debugDisplay->append("start.");
-	orderImage();
-	imageStitchProcess();
+	//imageStitchProcess();
 }
 
 void CarPanoramaStitch::on_cancelBtn_clicked()
 {
 	ui.debugDisplay->append("cancel.");
+}
+
+void CarPanoramaStitch::on_lockBtn_clicked()
+{
+	orderImage();
+	for (int i = 0; i < 4; i++)
+	{
+		if (!showImg[i].isNull())
+		{
+			switch (i)
+			{
+			default:
+				break;
+			case 0:
+				ui.backPic->setPixmap(QPixmap::fromImage(showImg[0]));
+				break;
+			case 1:
+				ui.leftPic->setPixmap(QPixmap::fromImage(showImg[1]));
+				break;
+			case 2:
+				ui.frontPic->setPixmap(QPixmap::fromImage(showImg[2]));
+				break;
+			case 3:
+				ui.rightPic->setPixmap(QPixmap::fromImage(showImg[3]));
+				break;
+			}
+		}
+	}
+	ui.startBtn->setEnabled(true);
+
 }
