@@ -30,9 +30,10 @@ public:
 	bool camFlag[4] = { 0,0,0,0 };
 
 	/* For only image stitching. */
-	std::vector<Mat> srcImg;// 此vector用于stitch，故大小不固定。
+	std::vector<Mat> srcImg;// 固定大小为4
 	std::vector<QImage> showImg;// 固定大小为4，用于QIamge显示。
 							 //类中初始化另一个类时，应该在初始化列表中完成！
+	QImage showTestImg;
 	int numOfImg = 0;
 	
 	//Mat Img1;
@@ -45,6 +46,14 @@ public:
 	QImage frontImg;//Img3.
 	QImage rightImg;//Img4.
 	/* For only image stitching. */
+
+	struct CAM
+	{
+		Mat cv_img;
+		QImage qt_img;
+		bool isNull = true;
+
+	};
 
 	
 

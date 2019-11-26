@@ -13,8 +13,84 @@ std::string qstr2str(const QString qstr)
 }
 /*************************************/
 
+
+//*@param clone true 表示与 Mat 不共享内存，更改生成的 mat 不会影响原始图像，false 则会与 mat 共享内存
+//* @param rb_swap 只针对 CV_8UC3 格式，如果 true 则会调换 R 与 B RGB->BGR，如果共享内存的话原始图像也会发生变化
+QImage cvMat2QImage(const cv::Mat& mat, bool clone, bool rb_swap)
+{
+	const uchar *pSrc = (const uchar*)mat.data;
+	// 8-bits unsigned, NO. OF CHANNELS = 1
+	if (mat.type() == CV_8UC1)
+	{
+		//QImage image(mat.cols, mat.rows, QImage::Format_Grayscale8);
+		QImage image(pSrc, mat.cols, mat.rows, mat.step, QImage::Format_Grayscale8);
+		if (clone) return image.copy();
+		return image;
+	}
+	// 8-bits unsigned, NO. OF CHANNELS = 3
+	else if (mat.type() == CV_8UC3)
+	{
+		// Create QImage with same dimensions as input Mat
+		QImage image(pSrc, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);
+		if (clone)
+		{
+			if (rb_swap) return image.rgbSwapped();
+			return image.copy();
+		}
+		else
+		{
+			if (rb_swap)
+			{
+				cv::cvtColor(mat, mat, COLOR_BGR2RGB);
+			}
+			return image;
+		}
+
+	}
+	else if (mat.type() == CV_8UC4)
+	{
+		qDebug() << "CV_8UC4";
+		QImage image(pSrc, mat.cols, mat.rows, mat.step, QImage::Format_ARGB32);
+		if (clone) return image.copy();
+		return image;
+	}
+	else
+	{
+		qDebug() << "ERROR: Mat could not be converted to QImage.";
+		return QImage();
+	}
+}
+
+cv::Mat QImage2cvMat(QImage &image, bool clone, bool rb_swap)
+{
+	cv::Mat mat;
+	//qDebug() << image.format();
+	switch (image.format())
+	{
+	case QImage::Format_ARGB32:
+	case QImage::Format_RGB32:
+	case QImage::Format_ARGB32_Premultiplied:
+		mat = cv::Mat(image.height(), image.width(), CV_8UC4, (void *)image.constBits(), image.bytesPerLine());
+		if (clone)  mat = mat.clone();
+		break;
+	case QImage::Format_RGB888:
+		mat = cv::Mat(image.height(), image.width(), CV_8UC3, (void *)image.constBits(), image.bytesPerLine());
+		if (clone)  mat = mat.clone();
+		if (rb_swap) cv::cvtColor(mat, mat, COLOR_BGR2RGB);
+		break;
+	case QImage::Format_Indexed8:
+	case QImage::Format_Grayscale8:
+		mat = cv::Mat(image.height(), image.width(), CV_8UC1, (void *)image.bits(), image.bytesPerLine());
+		if (clone)  mat = mat.clone();
+		break;
+	}
+	return mat;
+}
+
+/***************************************************************************/
+
 CarPanoramaStitch::CarPanoramaStitch(QWidget *parent)
-	: QWidget(parent),showImg(4)
+	: QWidget(parent),srcImg(4),showImg(4)
 {
 	ui.setupUi(this);
 	ui.startBtn->setEnabled(false);
@@ -24,21 +100,30 @@ CarPanoramaStitch::CarPanoramaStitch(QWidget *parent)
 void CarPanoramaStitch::orderImage()
 {
 	//to-do: better way of order image.
+	//! 注意。因为此处使用vector来存储4张QImage，所以必须将临时变量深拷贝出来，再赋值。否则那段内存temp2.data一直被刷新和共用。
 	for (int i = 0; i < 4; i++)
 	{
+
 		if (camFlag[i])
 		{
 			temp = imread(qstr2str(imageFilePath[i]));
-			Mat temp2;
-			temp.convertTo(temp2, CV_8UC3);
-			srcImg.push_back(temp2);
-			cvtColor(temp2, temp2, COLOR_BGR2RGB);
+			Mat temp2 = temp;
+			QImage help;
+			//? 是否深拷贝？
+			srcImg[i] = temp;
+
+			cvtColor(temp, temp2, COLOR_BGR2RGB);
 			qDebug()<< ui.backPic->width()<< ui.backPic->height();
-			//！ 这里resize有问题，会导致QIamge显示错误
-			cv::resize(temp2, temp2, Size(ui.backPic->width(), ui.backPic->height()));
+
+			cv::resize(temp2, temp2, Size(320,180));
 			qDebug() << temp2.step;
 			
-			showImg[i] = QImage((const unsigned char*)(temp2.data),temp2.cols, temp2.rows,temp2.step[0], QImage::Format_RGB888);
+			//! 因为这里使用temp2.data，所以后面需要深拷贝copy
+			help = QImage((const unsigned char*)(temp2.data),temp2.cols, temp2.rows,temp2.step, QImage::Format_RGB888);
+			showImg[i] = help.copy();
+			//showTestImg = help;
+			//ui.testPic->setPixmap(QPixmap::fromImage(showTestImg));
+			//ui.testPic->setPixmap(QPixmap::fromImage(showImg[i]));
 		}
 		else
 		{
@@ -162,6 +247,26 @@ void CarPanoramaStitch::on_lockBtn_clicked()
 				break;
 			case 3:
 				ui.rightPic->setPixmap(QPixmap::fromImage(showImg[3]));
+				break;
+			}
+		}
+		else
+		{
+			switch (i)
+			{
+			default:
+				break;
+			case 0:
+				ui.backPic->clear();
+				break;
+			case 1:
+				ui.leftPic->clear();
+				break;
+			case 2:
+				ui.frontPic->clear();
+				break;
+			case 3:
+				ui.rightPic->clear();
 				break;
 			}
 		}
