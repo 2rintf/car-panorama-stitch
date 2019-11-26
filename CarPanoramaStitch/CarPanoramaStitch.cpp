@@ -94,6 +94,10 @@ CarPanoramaStitch::CarPanoramaStitch(QWidget *parent)
 {
 	ui.setupUi(this);
 	ui.startBtn->setEnabled(false);
+
+	// 初始化stitcher
+	stitcher = Stitcher::create();
+	stitcher->setFeaturesFinder((Ptr<Feature2D>)xfeatures2d::SIFT::create());
 }
 
 
@@ -106,16 +110,18 @@ void CarPanoramaStitch::orderImage()
 
 		if (camFlag[i])
 		{
+			//! 每一次imread()实际上都是新建一个Mat赋值给temp，所以内存地址并不是原来的那个。
+			//！ 虽然不会导致内存重用，但还是深拷贝为好
+			//！ KEY：如果是通过内存指针来初始化一个Mat，那么它在销毁时，并不会销毁这段内存，因为这段内存并不是由它创建的，否则可能这段内存会被销毁两次！
 			temp = imread(qstr2str(imageFilePath[i]));
 			Mat temp2 = temp;
 			QImage help;
-			//? 是否深拷贝？
-			srcImg[i] = temp;
+			srcImg[i] = temp.clone();
 
 			cvtColor(temp, temp2, COLOR_BGR2RGB);
 			qDebug()<< ui.backPic->width()<< ui.backPic->height();
 
-			cv::resize(temp2, temp2, Size(320,180));
+			cv::resize(temp2, temp2, Size(ui.backPic->width(), ui.backPic->height()));
 			qDebug() << temp2.step;
 			
 			//! 因为这里使用temp2.data，所以后面需要深拷贝copy
@@ -127,6 +133,7 @@ void CarPanoramaStitch::orderImage()
 		}
 		else
 		{
+			srcImg[i] = Mat();
 			showImg[i] = QImage();
 		}
 	}
@@ -137,7 +144,24 @@ void CarPanoramaStitch::imageStitchProcess()
 	//Ptr<Stitcher> stitcher = Stitcher::create();
 	//stitcher->setFeaturesFinder((Ptr<Feature2D>)xfeatures2d::SIFT::create());
 	Mat pano;
-	//Stitcher::Status status = stitcher->stitch(, pano);
+	Stitcher::Status status = stitcher->stitch(imgForStitch, pano);
+	if (status != Stitcher::OK)
+	{
+		qDebug() << "stitch error";
+		//cout << "Can't stitch images, error code = " << int(status) << endl;
+		//return -1;
+	}
+	else
+	{
+		Mat temp = pano;
+		int colsOfPano = ui.backPic->width() * numOfStitchImage;
+
+		cv::resize(temp, temp, Size(colsOfPano, ui.paronamaPic->height()));
+		
+		//之前的Mat都已经 BGR2RGB 了，故此处不用再翻转了。
+		pano_qt = cvMat2QImage(temp, true, true);
+		ui.paronamaPic->setPixmap(QPixmap::fromImage(pano_qt));
+	}
 
 	
 }
@@ -217,7 +241,12 @@ void CarPanoramaStitch::on_rightSelectBtn_clicked()
 void CarPanoramaStitch::on_startBtn_clicked()
 {
 	ui.debugDisplay->append("start.");
-	//imageStitchProcess();
+	auto start = std::chrono::system_clock::now();
+	imageStitchProcess();
+	auto end = std::chrono::system_clock::now();
+	auto duration = std::chrono::duration_cast<microseconds>(end - start);
+	qDebug() << double(duration.count()) * microseconds::period::num / microseconds::period::den << "s";
+
 }
 
 void CarPanoramaStitch::on_cancelBtn_clicked()
@@ -227,6 +256,7 @@ void CarPanoramaStitch::on_cancelBtn_clicked()
 
 void CarPanoramaStitch::on_lockBtn_clicked()
 {
+	numOfStitchImage = 0;
 	orderImage();
 	for (int i = 0; i < 4; i++)
 	{
@@ -269,6 +299,13 @@ void CarPanoramaStitch::on_lockBtn_clicked()
 				ui.rightPic->clear();
 				break;
 			}
+		}
+
+		if (!srcImg[i].empty())
+		{
+			Mat temp = srcImg[i];
+			imgForStitch.push_back(temp.clone());
+			numOfStitchImage++;
 		}
 	}
 	ui.startBtn->setEnabled(true);
